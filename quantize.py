@@ -56,7 +56,7 @@ del model_fp16 # Free VRAM
 print("\n>>> Testing INT8 (Symmetric Quantization)...")
 int8_config = BitsAndBytesConfig(load_in_8bit=True)
 model_8bit = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID, quantization_config=int8_config, device_map={"": 0}
+    MODEL_ID, quantization_config=int8_config
 )
 
 ppl, tps = evaluate_model(model_8bit, tokenizer, dataset)
@@ -67,7 +67,7 @@ del model_8bit
 print("\n>>> Testing 4-bit (NF4)...")
 # Note: NF4 is a non-uniform quantization format better suited for Gaussian weights
 nf4_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4")
-model_4bit = AutoModelForCausalLM.from_pretrained(MODEL_ID, quantization_config=nf4_config, device_map="auto")
+model_4bit = AutoModelForCausalLM.from_pretrained(MODEL_ID, quantization_config=nf4_config)
 ppl, tps = evaluate_model(model_4bit, tokenizer, dataset)
 results.append({"Format": "4-bit (NF4)", "Perplexity": ppl, "Throughput (tok/s)": tps})
 del model_4bit
