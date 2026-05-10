@@ -11,12 +11,23 @@ DATASET_ID = "wikitext"
 DATASET_CONFIG = "wikitext-2-raw-v1"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-def evaluate_model(model, tokenizer, dataset, device = "cuda"):
+def evaluate_model(model, tokenizer, dataset, device = "cuda", num_samples = 500):
     model.eval()
     nlls = []
     total_time = 0
     total_tokens = 0
-    test_data = dataset["test"].select(range(10))
+    # Filter out empty/short rows up front so num_samples reflects real evals
+    candidates = [row for row in dataset["test"] if len(row["text"].strip()) > 0]
+    test_data = candidates[:num_samples]
+
+    # Warmup so first-iteration kernel compilation doesn't pollute timing
+    warmup_ids = tokenizer("Hello world.", return_tensors="pt").input_ids.to(device)
+    with torch.no_grad():
+        for _ in range(3):
+            model(warmup_ids)
+    if device == "cuda":
+        torch.cuda.synchronize()
+
     for batch in tqdm(test_data, desc = "Evaluating"):
         inputs = tokenizer(batch["text"], return_tensors = "pt").to(device)
         input_ids = inputs["input_ids"]
@@ -24,8 +35,12 @@ def evaluate_model(model, tokenizer, dataset, device = "cuda"):
         if input_ids.shape[1] < 2: continue
 
         with torch.no_grad():
+            if device == "cuda":
+                torch.cuda.synchronize()
             start_time = time.time()
             outputs = model(input_ids, labels = input_ids)
+            if device == "cuda":
+                torch.cuda.synchronize()
             end_time = time.time()
 
             neg_log_likelihood =  outputs.loss
