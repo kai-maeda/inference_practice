@@ -1,6 +1,6 @@
 import torch
 import time
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from datasets import load_dataset 
 from tqdm import tqdm
 import pandas as pd
