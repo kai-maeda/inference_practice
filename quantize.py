@@ -55,7 +55,10 @@ del model_fp16 # Free VRAM
 # 2. INT8 (LLM.int8())
 print("\n>>> Testing INT8 (Symmetric Quantization)...")
 int8_config = BitsAndBytesConfig(load_in_8bit=True)
-model_8bit = AutoModelForCausalLM.from_pretrained(MODEL_ID, quantization_config=int8_config, device_map="auto")
+model_8bit = AutoModelForCausalLM.from_pretrained(
+    MODEL_ID, quantization_config=int8_config, device_map={"": 0}
+)
+
 ppl, tps = evaluate_model(model_8bit, tokenizer, dataset)
 results.append({"Format": "INT8", "Perplexity": ppl, "Throughput (tok/s)": tps})
 del model_8bit
