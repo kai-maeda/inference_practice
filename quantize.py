@@ -9,7 +9,7 @@ def evaluate_model(model, tokenizer, dataset, device = "cuda"):
     model.eval()
     nlls = []
     total_time = 0
-    total+tokens = 0
+    total_tokens = 0
     test_data = dataset["test"].select(range(10))
     for batch in tqdm(test_data, desc = "Evaluating"):
         inputs = tokenizer(batch["text"], return_tensors = "pt").to(device)
